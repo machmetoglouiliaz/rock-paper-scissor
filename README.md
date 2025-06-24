@@ -1,0 +1,2 @@
+##Rock Paper Scissor
+A Rock-Paper-Scissors game where two automated players (bots) compete in 100 rounds. The application logs every round to a file for debugging and analytics purposes, while returning only the final game results.
