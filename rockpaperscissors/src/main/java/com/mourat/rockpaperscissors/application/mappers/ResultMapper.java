@@ -6,10 +6,23 @@ import com.mourat.rockpaperscissors.domain.model.Game;
 import com.mourat.rockpaperscissors.domain.model.GameState;
 import com.mourat.rockpaperscissors.domain.model.RoundResult;
 
+/**
+ * Utility class responsible for mapping domain objects related to the game session
+ * into Data Transfer Objects (DTOs) for communication layer.
+ */
 public class ResultMapper {
 
+    /**
+     * Converts a {@link GameSession} domain object into a {@link ResultDto} object,
+     * extracting and transforming relevant game result data.
+     *
+     * @param gameSession the game session to map; must not be null
+     * @return a {@link ResultDto} representing the current state and results of the game session
+     * @throws IllegalArgumentException if {@code gameSession} is null
+     */
     public static ResultDto toResultDto(GameSession gameSession){
 
+        if(gameSession == null) throw new IllegalArgumentException();
         ResultDto resultDto = new ResultDto();
 
         Game game = gameSession.getGame();

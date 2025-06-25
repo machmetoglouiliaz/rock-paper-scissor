@@ -2,6 +2,10 @@ package com.mourat.rockpaperscissors.application.dto;
 
 import lombok.Data;
 
+/**
+ * Data transfer object (DTO) representing the result summary of the game
+ * Contains player details, scores, current round info and game status
+ */
 @Data
 public class ResultDto {
     private String player1Name;
@@ -28,8 +32,13 @@ public class ResultDto {
     private String gameWinnerPlayerName;
     private String gameWinnerPlayerId;
 
+    /**
+     * Returns formatted string summarizing the current state of the game
+     *
+     * @return a multiline string representation of the game result
+     */
     @Override
-    public String toString(){
+    public String toString() {
         return "-".repeat(30) + "\n" +
                 "PLAYER 1: NAME: " + player1Name + " | ID: " + player1Id + " | SCORE: " + player1Score + "\n" +
                 "PLAYER 2: NAME: " + player2Name + " | ID: " + player2Id + " | SCORE: " + player2Score + "\n" +
@@ -41,7 +50,7 @@ public class ResultDto {
                 "WINNER OF THE ROUND IS: " + roundWinnerPlayerName + " | " + roundWinnerPlayerId + "\n" +
                 "-".repeat(30) + "\n" +
                 "GAME WITH ID " + gameId + " IS " + (isGameFinished ?
-                    "FINISHED! WINNER IS: " + gameWinnerPlayerName + " | " +gameWinnerPlayerId
-                    :  "ON ROUND " + currentRound + "/" + totalRounds );
+                    "FINISHED! WINNER IS: " + gameWinnerPlayerName + " | " + gameWinnerPlayerId
+                    : "ON ROUND " + currentRound + "/" + totalRounds);
     }
 }

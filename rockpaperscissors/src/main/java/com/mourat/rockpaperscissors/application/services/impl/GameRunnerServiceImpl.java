@@ -14,131 +14,118 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/*
- * Game runner service orchestrates all the domain level entities and services
- * User has access only to the application level services
- *
- * This service tracks the game and players also their states
- */
 @Service
 public class GameRunnerServiceImpl implements GameRunnerService {
 
-    // Tracks all the players in case of player details is needed, or same player looks for another game
     private List<Player> players = new ArrayList<>();
-
-    // Tracks different kind of games to manage them accordingly
     private List<GameSession> activeGames = new ArrayList<>();
     private List<GameSession> completeGames = new ArrayList<>();
     private List<GameSession> waitingGames = new ArrayList<>();
 
-    // Session factory injected by spring
     private GameSessionFactory gameSessionFactory;
 
-    // injects session factory
     @Autowired
     public GameRunnerServiceImpl(GameSessionFactory sessionFactory){
         this.gameSessionFactory = sessionFactory;
     }
 
 
-    // Creates a new game by the given player and given rounds long
+    /**
+     * {@inheritDoc}
+     * @implNote The game is added to the waiting list immediately after creation.
+     */
     @Override
-    public String createGame(String playerId, int rounds){
-
-        Game newGame;
+    public String createGame(String playerId, int rounds) {
         Player player = this.findPlayerById(playerId);
-
-        if(player == null){
-            System.out.println("Player with id" + playerId + " doesn't exist");
-            return null;
+        if (player == null) {
+            System.out.println("Player with id " + playerId + " doesn't exist");
+            return "";
         }
 
-        // Try to create a new game, throws exception if the player does not exist or rounds are not in correct range
         try {
-            newGame = Game.newGame(player, rounds);
-        } catch(Exception e){
-            System.out.println(e.getMessage());
-            return "";
-        }
-
-        // Add the newly created game to the waiting list by creating a new session for it
-        this.waitingGames.addLast(gameSessionFactory.createSession(player, newGame));
-        return newGame.getId().toString();
-    }
-
-    // Creates a new player with the given name
-    @Override
-    public String createPlayer(String name){
-
-        Player newPlayer;
-
-        // Try to create a new player, throws exception if the given name is not correct
-        // Returns empty string as an id
-        try{
-            newPlayer = Player.newPlayerWithName(name);
+            Game newGame = Game.newGame(player, rounds);
+            GameSession session = gameSessionFactory.createSession(player, newGame);
+            this.waitingGames.add(session);
+            return newGame.getId().toString();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("Failed to create game: " + e.getMessage());
             return "";
         }
-
-        // Add the successfully created player to the player list
-        this.players.addLast(newPlayer);
-        return newPlayer.getId().toString();
     }
 
-    // Finds an already existing game for the player
+    /**
+     * {@inheritDoc}
+     * @implNote Players are stored in memory for reuse across sessions.
+     */
     @Override
-    public String joinGame(String playerId){
-
-        Player player = this.findPlayerById(playerId);
-
-        if(player == null){
-            System.out.println("Player with id" + playerId + " doesn't exist");
-            return null;
+    public String createPlayer(String name) {
+        try {
+            Player newPlayer = Player.newPlayerWithName(name);
+            this.players.add(newPlayer);
+            return newPlayer.getId().toString();
+        } catch (Exception e) {
+            System.out.println("Failed to create player: " + e.getMessage());
+            return "";
         }
+    }
 
-        // Check if there is a game which is waiting for player
-        if(this.waitingGames.isEmpty()) {
+    /**
+     * {@inheritDoc}
+     * @implNote Players are not allowed to join if already in another session.
+     */
+    @Override
+    public String joinGame(String playerId) {
+        Player player = this.findPlayerById(playerId);
+        if (player == null) {
+            System.out.println("Player with id " + playerId + " doesn't exist");
             return "";
         }
 
-        // Take a game which waits for a player
+        if (waitingGames.isEmpty()) {
+            System.out.println("There are no games to join");
+            return "";
+        }
+
+        if (player.getGameSession() != null) {
+            System.out.println("Player with id " + playerId + " is already in a session");
+            return "";
+        }
+
         GameSession gameSession = this.waitingGames.removeFirst();
-        Game game = gameSession.getGame();
+        boolean joined = gameSession.joinGame(player);
 
-        // Connect the player and the game to each other
-        gameSession.joinGame(player);
+        if (!joined) {
+            System.out.println("Failed to join game");
+            return "";
+        }
 
-        // Add the game to the active games list
-        this.activeGames.addLast(gameSession);
-
-        return game.getId().toString();
-
+        this.activeGames.add(gameSession);
+        return gameSession.getGame().getId().toString();
     }
 
-    // Plays the round for the player with given id
+    /**
+     * {@inheritDoc}
+     * @implNote This method handles both input validation and domain interaction.
+     */
     @Override
     public ResultDto makeMove(String playerId, String moveString) {
-
-        Move move;
         Player player = findPlayerById(playerId);
-        GameSession gameSession;
-
-        try {
-            move = Move.valueOf(moveString);
-        } catch (IllegalArgumentException e){
-            System.out.println("Move " + moveString + " does not exist!");
-            return null;
-        }
-
-        if(player == null){
+        if (player == null) {
             System.out.println("Player with id " + playerId + " doesn't exist");
             return null;
         }
 
-        gameSession = player.getGameSession();
-        if(gameSession == null){
-            System.out.println("Player with id " + playerId + " is not joined to a game yet");
+        Move move;
+        try {
+            move = Move.valueOf(moveString);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid move: " + moveString);
+            return null;
+        }
+
+        GameSession gameSession = player.getGameSession();
+        if (gameSession == null) {
+            System.out.println("Player with id " + playerId + " is not joined to any game");
             return null;
         }
 
@@ -146,15 +133,17 @@ public class GameRunnerServiceImpl implements GameRunnerService {
     }
 
     /**
-     * Search player with given id in the player list
+     * Finds a player object from the list by matching id.
      *
-     * @param playerId given playerId as string
-     * @return player object if there is a player with the given id, else null
+     * @param playerId string representation of a player id
+     * @return the player if found, otherwise null
      */
-    private Player findPlayerById(String playerId){
+    private Player findPlayerById(String playerId) {
 
-        for(Player player : players){
-            if(player.getId().equals(UUID.fromString(playerId))){
+        UUID id = UUID.fromString(playerId);
+
+        for (Player player : players) {
+            if (player.getId().equals(id)) {
                 return player;
             }
         }

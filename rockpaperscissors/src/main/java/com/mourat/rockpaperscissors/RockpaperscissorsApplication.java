@@ -38,41 +38,41 @@ public class RockpaperscissorsApplication {
 
 	}
 
-	public void botOne(){
+	public void botTwo(){
 		int rounds = 100;
 		String moveSet[] = {"ROCK", "PAPER", "SCISSORS"};
 		Random random = new Random();
 
-		System.out.println("I'm bot 1");
-		String playerId = gameRunnerService.createPlayer("Player A");
-		System.out.println("BOT 1: player id:" + playerId);
+		System.out.println("I'm bot 2");
+		String playerId = gameRunnerService.createPlayer("Player B");
+		System.out.println("BOT 2: player id:" + playerId);
 		String gameId = gameRunnerService.createGame(playerId, rounds);
-		System.out.println("BOT 1: game id:" + gameId);
+		System.out.println("BOT 2: game id:" + gameId);
 
 		ResultDto result;
 		do {
 			result = gameRunnerService.makeMove(playerId, moveSet[random.nextInt(3)]);
 		}while(Integer.parseInt(result.getCurrentRound()) != Integer.parseInt(result.getTotalRounds()) + 1);
 
-		System.out.println("BOT 1: \n" + result);
+		System.out.println("BOT 2: \n" + result);
 
 	}
 
-	public void botTwo(){
-		System.out.println("I'm bot 2");
-		String playerId = gameRunnerService.createPlayer("Player B");
-		System.out.println("BOT 2: player id:" + playerId);
+	public void botOne(){
+		System.out.println("I'm bot 1");
+		String playerId = gameRunnerService.createPlayer("Player A");
+		System.out.println("BOT 1: player id:" + playerId);
 
 		String gameId;
 		do {
 			gameId = gameRunnerService.joinGame(playerId);
 		}while(gameId.isEmpty());
 
-		System.out.println("BOT 2: game id:" + gameId);
+		System.out.println("BOT 1: game id:" + gameId);
 
 		ResultDto result;
 		do {
-			result = gameRunnerService.makeMove(playerId, "ROCK");
+			result = gameRunnerService.makeMove(playerId, "PAPER");
 		}while(Integer.parseInt(result.getCurrentRound()) != Integer.parseInt(result.getTotalRounds()) + 1);
 
 	}

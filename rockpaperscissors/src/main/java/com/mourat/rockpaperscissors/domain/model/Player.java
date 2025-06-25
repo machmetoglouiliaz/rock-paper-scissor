@@ -7,53 +7,49 @@ import lombok.Setter;
 import java.util.UUID;
 
 /**
- * <--- Player Entity --->
- * Each user of the application represented by an instance of Player class
- * Every player has a name, a unique ID and, if it is in a game, an association with that game
+ * Represents a player in the game.
+ * Each player has a name, a unique ID, and may be associated with a game.
  */
 @Getter
 public class Player {
 
-    // Unique id of player
+    /** Unique player ID. */
     private final UUID id;
 
-    // Name of the player
+    /** Player's name. */
     @Setter
     private String name;
 
-    // The game which is associated with this player
+    /** Game currently played by the player. */
     @Setter
     private Game gamePlaying;
+
+    /** Game session the player is part of. */
     @Setter
     private GameSession gameSession;
 
     /**
-     * Each player is created by a name and gets a unique id automatically
-     * Player creation is handled by factory method newPlayer
+     * Constructs a player with the given name.
+     * Use {@link #newPlayerWithName(String)} for validation.
      *
-     * @param name name of the player
+     * @param name player's name
      */
     private Player(String name) {
         this.id = UUID.randomUUID();
         this.name = name;
-
     }
 
     /**
-     * Creates a new player with a given name
-     * Ensures the name is valid
+     * Factory method to create a player with a validated name.
      *
-     * @param name new players name
-     * @return a new Player instance with the given name
+     * @param name player's name (2–16 characters)
+     * @return new {@code Player} instance
+     * @throws IllegalArgumentException if name is invalid
      */
     public static Player newPlayerWithName(String name) {
-
-        // Check if the name is valid, valid name must be between 2 and 16 characters
         if (name == null || name.trim().length() < 2 || name.trim().length() > 16) {
             throw new IllegalArgumentException("Name must be between 2 and 16 characters");
         }
-
         return new Player(name);
     }
-
 }

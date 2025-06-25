@@ -5,24 +5,27 @@ import com.mourat.rockpaperscissors.domain.model.Player;
 import com.mourat.rockpaperscissors.domain.model.RoundResult;
 
 /**
- * Game rules service interface
- * Application layer services will use this interface to check rules
+ * Defines the game rules for determining the round winner.
+ * Intended to be used by the application layer.
  */
 public interface GameRulesService {
 
     /**
-     * The game logic that applies to the round
-     * This method must only be called from application layer,
-     * so the arguments should already be validated before
-     * LOGIC:   ROCK wins SCISSORS,
-     *          SCISSORS wins PAPER,
-     *          PAPER wins ROCK
+     * Determines the winner of a round.
+     * Assumes all inputs are already validated.
+     * <p>
+     * Logic:
+     * <ul>
+     *   <li>ROCK beats SCISSORS</li>
+     *   <li>SCISSORS beats PAPER</li>
+     *   <li>PAPER beats ROCK</li>
+     * </ul>
      *
-     * @param player1     first player who plays the round
-     * @param player1Move the move of player 1
-     * @param player2     second player who plays the round
-     * @param player2Move the move of player 2
-     * @return returns an immutable record instance of result
+     * @param player1     the first player
+     * @param player1Move move of the first player
+     * @param player2     the second player
+     * @param player2Move move of the second player
+     * @return {@link RoundResult} representing the outcome
      */
     RoundResult checkRoundWinner(Player player1, Move player1Move, Player player2, Move player2Move);
 }

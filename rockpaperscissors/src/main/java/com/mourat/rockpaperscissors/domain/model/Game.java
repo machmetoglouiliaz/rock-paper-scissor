@@ -1,50 +1,59 @@
 package com.mourat.rockpaperscissors.domain.model;
 
-
-import com.mourat.rockpaperscissors.application.model.SessionState;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.UUID;
 
 /**
- * <--- Game Entity --->
- * Each game has a state, a given number of rounds and a result.
- * After the rounds are played the result is calculated to find the winner.
+ * Represents a game of Rock Paper Scissors.
+ * <p>
+ * Each game has a unique ID, a state, two players, and a fixed number of rounds.
+ * After the specified rounds are played, the game calculates the final result and determines the winner.
  */
 @Getter
 public class Game {
 
-    // Maximum rounds of the game, every game should have an end point
+    /** Maximum allowed rounds in a game. */
     public static final int MAX_ROUNDS = 100;
 
-    // Every game has a unique id
+    /** Unique identifier of the game. */
     private UUID id;
 
-    // The state of the game
+    /** Current state of the game. */
     GameState state = GameState.INIT;
 
-    // Players of the game
+    /** First player in the game. */
     private Player player1;
+
+    /** Second player in the game. */
     private Player player2;
 
-    // Scores of the players
+    /** Score of player 1. */
     private int player1Score;
+
+    /** Score of player 2. */
     private int player2Score;
+
+    /** Number of drawn rounds. */
     private int draws;
 
-    // Number of rounds and the array to keep the rounds result.
+    /** Total number of rounds in this game. */
     private final int rounds;
+
+    /** Tracks the current active round (1-based). */
     private int activeRound;
+
+    /** Array storing the results of each round. */
     private RoundResult[] roundResults;
 
-    // Game result
+    /** The final result of the game after all rounds have been played. */
     private GameResult result;
 
     /**
+     * Private constructor to enforce controlled creation of game instances.
      *
-     *
-     * @param rounds number of rounds to be played in this game
+     * @param player the owner (player 1) who starts the game
+     * @param rounds number of rounds for the game
      */
     private Game(Player player, int rounds) {
         this.id = UUID.randomUUID();
@@ -63,78 +72,70 @@ public class Game {
     }
 
     /**
-     * Creates a new game with given amount of rounds
+     * Static factory method to create a new game instance.
      *
-     * @param rounds number of rounds of the game to conclude a winner
-     * @return a new game with player as player 1 and a given number of rounds
+     * @param owner  the player who owns/starts the game (player 1)
+     * @param rounds number of rounds for the game; must be between 1 and {@link #MAX_ROUNDS}
+     * @return new game instance with the given parameters
+     * @throws IllegalArgumentException if rounds is less than 1 or greater than {@link #MAX_ROUNDS}
      */
     public static Game newGame(Player owner, int rounds) {
-
-
-        // Rounds must be a positive number, else cant be played
         if (rounds < 1) {
             throw new IllegalArgumentException("Rounds of the game must be a positive number!");
         }
 
-        // The game must end in some point
         if (rounds > MAX_ROUNDS) {
-            throw new IllegalArgumentException("The game can have max 100 rounds!");
+            throw new IllegalArgumentException("The game can have max " + MAX_ROUNDS + " rounds!");
         }
 
         return new Game(owner, rounds);
     }
 
     /**
-     * Imports the results to the game object and checks if the game is finished
+     * Plays a round by recording the round result, updating scores,
+     * and checking if the game has finished.
      *
-     * @param roundResult data for the current round
-     * @return null if the game continues, game result if the game finished
+     * @param roundResult the result data of the current round; must not be null
+     * @return {@code null} if the game continues; final {@link GameResult} if the game finishes after this round
+     * @throws IllegalStateException    if the game is not {@code IN_PROGRESS}
+     * @throws IllegalArgumentException if {@code roundResult} is null
      */
-    public GameResult playRound(RoundResult roundResult){
+    public GameResult playRound(RoundResult roundResult) {
+        if (state != GameState.IN_PROGRESS)
+            throw new IllegalStateException("The game state is not in progress, can't play the round");
+        if (roundResult == null)
+            throw new IllegalArgumentException("Round can be played only with valid rounds data");
 
-        // Check if the round can be played
-        if(state != GameState.IN_PROGRESS) throw new IllegalStateException("The game state is not in progress, cant play the round");
-        if(roundResult == null) throw new IllegalArgumentException("Round can be played only with valid rounds data");
-
-        // Store the round data
         this.roundResults[activeRound - 1] = roundResult;
         this.activeRound++;
 
-        // Increase score according the given data
-        if(roundResult.winner() == null) {
+        if (roundResult.winner() == null) {
             this.draws++;
-        }
-        else if(roundResult.winner().equals(player1)){
+        } else if (roundResult.winner().equals(player1)) {
             this.player1Score++;
-        }
-        else {
+        } else {
             this.player2Score++;
         }
 
-        // Check if the game is finished and return the results if it is
         if (activeRound > rounds) {
             return endGame();
         }
 
-        // Return null if the game continues
         return null;
     }
 
     /**
-     * Changes the game state to finished, making it immutable and creates the final result
+     * Ends the game by calculating the winner and setting the game state to finished.
      *
-     * @return final result of the game
+     * @return the final {@link GameResult} of the game
      */
-    private GameResult endGame(){
-
+    private GameResult endGame() {
         Player winner;
 
-        // Determine the winner
-        if(player1Score > player2Score) winner = player1;
-        else if(player1Score < player2Score) winner = player2;
+        if (player1Score > player2Score) winner = player1;
+        else if (player1Score < player2Score) winner = player2;
         else winner = null;
 
-        // Create the final result
         this.result = new GameResult(player1Score, player2Score, draws, winner);
         this.state = GameState.FINISHED;
 
@@ -142,14 +143,13 @@ public class Game {
     }
 
     /**
-     * Adds the second player to this game and connects it from both sides
+     * Adds the second player to the game.
      *
-     * @param player joining player
-     * @return true if successful, else false
+     * @param player the {@link Player} to join as player two
+     * @return true if player was successfully added; false if player is null
      */
-    public boolean setPlayerTwo(Player player){
-
-        if(player == null) return false;
+    public boolean setPlayerTwo(Player player) {
+        if (player == null) return false;
 
         this.player2 = player;
         player.setGamePlaying(this);
@@ -157,8 +157,13 @@ public class Game {
         return true;
     }
 
-    public RoundResult getLastRoundResult(){
-        if(activeRound < 2) return null;
+    /**
+     * Returns the result of the most recently completed round.
+     *
+     * @return the last {@link RoundResult} or {@code null} if no rounds have been played yet
+     */
+    public RoundResult getLastRoundResult() {
+        if (activeRound < 2) return null;
         return roundResults[activeRound - 2];
     }
 
