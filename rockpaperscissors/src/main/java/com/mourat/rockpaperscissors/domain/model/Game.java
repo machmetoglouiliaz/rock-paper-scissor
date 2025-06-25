@@ -1,23 +1,37 @@
 package com.mourat.rockpaperscissors.domain.model;
 
 
+import com.mourat.rockpaperscissors.application.model.SessionState;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.UUID;
+
 /**
  * <--- Game Entity --->
- * Each game has a state, 2 players, a given number of rounds and a result.
+ * Each game has a state, a given number of rounds and a result.
  * After the rounds are played the result is calculated to find the winner.
- * The game starts only if both players are available.
  */
+@Getter
 public class Game {
 
     // Maximum rounds of the game, every game should have an end point
     public static final int MAX_ROUNDS = 100;
 
-    // Game state
-    private GameState state = GameState.INIT;
+    // Every game has a unique id
+    private UUID id;
 
-    // Players of this game.
+    // The state of the game
+    GameState state = GameState.INIT;
+
+    // Players of the game
     private Player player1;
     private Player player2;
+
+    // Scores of the players
+    private int player1Score;
+    private int player2Score;
+    private int draws;
 
     // Number of rounds and the array to keep the rounds result.
     private final int rounds;
@@ -28,34 +42,34 @@ public class Game {
     private GameResult result;
 
     /**
-     * Each game must be created by a player.
-     * Games without players are considered as concluded.
      *
-     * @param player player who creates the game
+     *
      * @param rounds number of rounds to be played in this game
      */
     private Game(Player player, int rounds) {
+        this.id = UUID.randomUUID();
         this.rounds = rounds;
-        player1 = player;
-        activeRound = 1;
-        roundResults = new RoundResult[rounds];
-        state = GameState.WAITING;
+        this.activeRound = 1;
+        this.roundResults = new RoundResult[rounds];
+        this.state = GameState.IN_PROGRESS;
+        this.player1 = player;
+        player.setGamePlaying(this);
+
+        this.player1Score = 0;
+        this.player2Score = 0;
+        this.draws = 0;
+
+        this.result = null;
     }
 
     /**
-     * Creates a new game with validating the arguments
-     * Valid player must not be null
+     * Creates a new game with given amount of rounds
      *
-     * @param player player who creates the game
      * @param rounds number of rounds of the game to conclude a winner
      * @return a new game with player as player 1 and a given number of rounds
      */
-    public static Game newGame(Player player, int rounds) {
+    public static Game newGame(Player owner, int rounds) {
 
-        // Validate player that exists
-        if (player == null) {
-            throw new IllegalArgumentException("A game can't be created without a player!");
-        }
 
         // Rounds must be a positive number, else cant be played
         if (rounds < 1) {
@@ -63,32 +77,89 @@ public class Game {
         }
 
         // The game must end in some point
-        if (rounds <= MAX_ROUNDS) {
+        if (rounds > MAX_ROUNDS) {
             throw new IllegalArgumentException("The game can have max 100 rounds!");
         }
 
-        return new Game(player, rounds);
+        return new Game(owner, rounds);
     }
 
     /**
-     * Set the second player of the game, first player is always set on creation
-     * Connects the player and the game in both sides
-     * By joining another player, game starts and the game state changes to RUNNING
+     * Imports the results to the game object and checks if the game is finished
      *
-     * @param player the joining player
+     * @param roundResult data for the current round
+     * @return null if the game continues, game result if the game finished
      */
-    public void setPlayerTwo(Player player){
+    public GameResult playRound(RoundResult roundResult){
 
-        // Player must be valid to join
-        if(player == null){
-            throw new IllegalArgumentException("Joining player can't be null!");
+        // Check if the round can be played
+        if(state != GameState.IN_PROGRESS) throw new IllegalStateException("The game state is not in progress, cant play the round");
+        if(roundResult == null) throw new IllegalArgumentException("Round can be played only with valid rounds data");
+
+        // Store the round data
+        this.roundResults[activeRound - 1] = roundResult;
+        this.activeRound++;
+
+        // Increase score according the given data
+        if(roundResult.winner() == null) {
+            this.draws++;
+        }
+        else if(roundResult.winner().equals(player1)){
+            this.player1Score++;
+        }
+        else {
+            this.player2Score++;
         }
 
-        // Set the second player, also set the game of the player to this game
+        // Check if the game is finished and return the results if it is
+        if (activeRound > rounds) {
+            return endGame();
+        }
+
+        // Return null if the game continues
+        return null;
+    }
+
+    /**
+     * Changes the game state to finished, making it immutable and creates the final result
+     *
+     * @return final result of the game
+     */
+    private GameResult endGame(){
+
+        Player winner;
+
+        // Determine the winner
+        if(player1Score > player2Score) winner = player1;
+        else if(player1Score < player2Score) winner = player2;
+        else winner = null;
+
+        // Create the final result
+        this.result = new GameResult(player1Score, player2Score, draws, winner);
+        this.state = GameState.FINISHED;
+
+        return this.result;
+    }
+
+    /**
+     * Adds the second player to this game and connects it from both sides
+     *
+     * @param player joining player
+     * @return true if successful, else false
+     */
+    public boolean setPlayerTwo(Player player){
+
+        if(player == null) return false;
+
         this.player2 = player;
         player.setGamePlaying(this);
 
-        // Change the game state to running
-        this.state = GameState.RUNNING;
+        return true;
     }
+
+    public RoundResult getLastRoundResult(){
+        if(activeRound < 2) return null;
+        return roundResults[activeRound - 2];
+    }
+
 }

@@ -1,7 +1,8 @@
 package com.mourat.rockpaperscissors.domain.model;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import com.mourat.rockpaperscissors.application.model.GameSession;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
@@ -10,16 +11,21 @@ import java.util.UUID;
  * Each user of the application represented by an instance of Player class
  * Every player has a name, a unique ID and, if it is in a game, an association with that game
  */
+@Getter
 public class Player {
 
     // Unique id of player
     private final UUID id;
 
     // Name of the player
+    @Setter
     private String name;
 
     // The game which is associated with this player
+    @Setter
     private Game gamePlaying;
+    @Setter
+    private GameSession gameSession;
 
     /**
      * Each player is created by a name and gets a unique id automatically
@@ -50,12 +56,4 @@ public class Player {
         return new Player(name);
     }
 
-    /**
-     * Simple setter for gamePlaying field
-     *
-     * @param gamePlaying the game to associate with this player
-     */
-    public void setGamePlaying(Game gamePlaying) {
-        this.gamePlaying = gamePlaying;
-    }
 }

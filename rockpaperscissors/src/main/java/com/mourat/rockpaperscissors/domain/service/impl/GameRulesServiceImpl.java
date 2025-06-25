@@ -4,14 +4,16 @@ import com.mourat.rockpaperscissors.domain.model.Move;
 import com.mourat.rockpaperscissors.domain.model.Player;
 import com.mourat.rockpaperscissors.domain.model.RoundResult;
 import com.mourat.rockpaperscissors.domain.service.GameRulesService;
+import org.springframework.stereotype.Service;
 
-/**
+/*
  * Game rules service implementation
  * Some rules are round based and others game based
  */
+@Service
 public class GameRulesServiceImpl implements GameRulesService {
 
-    /**
+    /*
      * The round logic that applies to each round
      * This method must only be called from application layer,
      * so the arguments should already be validated before
@@ -19,14 +21,8 @@ public class GameRulesServiceImpl implements GameRulesService {
      * LOGIC:   ROCK wins SCISSORS,
      *          SCISSORS wins PAPER,
      *          PAPER wins ROCK
-     *
-     * @param player1 first player who plays the round
-     * @param player1Move the move of player 1
-     * @param player2 second player who plays the round
-     * @param player2Move the move of player 2
-     * @return returns an immutable record instance of result
      */
-
+    @Override
     public RoundResult checkRoundWinner(Player player1, Move player1Move, Player player2, Move player2Move) {
 
 
@@ -46,9 +42,7 @@ public class GameRulesServiceImpl implements GameRulesService {
         }
 
         // Applied game logic to determine the winner
-        if ((player1Move == Move.ROCK && player2Move == Move.SCISSORS) ||
-                (player1Move == Move.PAPER && player2Move == Move.ROCK) ||
-                (player1Move == Move.SCISSORS && player2Move == Move.PAPER)) {
+        if (player1Move.beats(player2Move)) {
             return new RoundResult(player1Move, player2Move, player1);
         } else {
             return new RoundResult(player1Move, player2Move, player2);
