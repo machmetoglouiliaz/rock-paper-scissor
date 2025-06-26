@@ -17,7 +17,6 @@ public class Player {
     private final UUID id;
 
     /** Player's name. */
-    @Setter
     private String name;
 
     /** Game currently played by the player. */

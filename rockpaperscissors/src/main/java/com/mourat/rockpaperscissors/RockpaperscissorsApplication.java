@@ -18,7 +18,7 @@ public class RockpaperscissorsApplication {
 		SpringApplication.run(RockpaperscissorsApplication.class, args);
 	}
 
-	//@Bean
+	@Bean
 	public CommandLineRunner commandLineRunner(GameRunnerService gameRunnerService){
 
 		this.gameRunnerService = gameRunnerService;

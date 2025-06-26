@@ -30,7 +30,9 @@ public class GameRulesServiceImpl implements GameRulesService {
             return new RoundResult(player1Move, player2Move, null);
         }
 
-        return player1Move.beats(player2Move)
+        return ((player1Move == Move.ROCK && player2Move == Move.SCISSORS) ||
+                (player1Move == Move.PAPER && player2Move == Move.ROCK) ||
+                (player1Move == Move.SCISSORS && player2Move == Move.PAPER))
                 ? new RoundResult(player1Move, player2Move, player1)
                 : new RoundResult(player1Move, player2Move, player2);
     }

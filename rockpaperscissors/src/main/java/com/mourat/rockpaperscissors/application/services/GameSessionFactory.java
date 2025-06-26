@@ -36,6 +36,12 @@ public class GameSessionFactory {
      * @return a new {@link GameSession} instance
      */
     public GameSession createSession(Player owner, Game game){
+        if(owner == null){
+            throw new IllegalArgumentException("Creator of the session cant be invalid");
+        }
+        if(game == null){
+            throw new IllegalArgumentException("Game of the session cant be invalid");
+        }
         return new GameSession(owner, game, gameRulesService);
     }
 }

@@ -173,8 +173,7 @@ class GameTest {
         assertNotNull(result);
         assertEquals(Move.PAPER, result.player1Move());
         assertEquals(Move.ROCK, result.player2Move());
-        assertNotNull(result.winner());
-        assertEquals("test", result.winner().getName());
+        assertEquals(game.getPlayer1(), result.winner());
     }
 
     private static Game getGameWithTwoPlayers(int rounds) {

@@ -14,15 +14,4 @@ public enum Move {
     /** Scissors move. */
     SCISSORS;
 
-    /**
-     * Checks if this move beats the other move.
-     *
-     * @param other the move to compare with
-     * @return {@code true} if this move beats the other, else {@code false}
-     */
-    public boolean beats(Move other) {
-        return (this == ROCK && other == SCISSORS) ||
-                (this == PAPER && other == ROCK) ||
-                (this == SCISSORS && other == PAPER);
-    }
 }
