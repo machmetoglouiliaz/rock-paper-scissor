@@ -17,16 +17,21 @@ import java.util.UUID;
 @Service
 public class GameRunnerServiceImpl implements GameRunnerService {
 
-    private List<Player> players = new ArrayList<>();
-    private List<GameSession> activeGames = new ArrayList<>();
-    private List<GameSession> completeGames = new ArrayList<>();
-    private List<GameSession> waitingGames = new ArrayList<>();
+    private final List<Player> players;
+    private final List<GameSession> activeGames;
+    private final List<GameSession> completeGames;
+    private final List<GameSession> waitingGames;
 
-    private GameSessionFactory gameSessionFactory;
+    private final GameSessionFactory gameSessionFactory;
 
     @Autowired
     public GameRunnerServiceImpl(GameSessionFactory sessionFactory){
         this.gameSessionFactory = sessionFactory;
+
+        this.players = new ArrayList<>();
+        this.activeGames = new ArrayList<>();
+        this.completeGames = new ArrayList<>();
+        this.waitingGames = new ArrayList<>();
     }
 
 

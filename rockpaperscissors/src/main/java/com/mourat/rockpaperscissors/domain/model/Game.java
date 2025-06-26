@@ -17,13 +17,13 @@ public class Game {
     public static final int MAX_ROUNDS = 100;
 
     /** Unique identifier of the game. */
-    private UUID id;
+    private final UUID id;
 
     /** Current state of the game. */
-    GameState state = GameState.INIT;
+    private GameState state = GameState.INIT;
 
     /** First player in the game. */
-    private Player player1;
+    private final Player player1;
 
     /** Second player in the game. */
     private Player player2;
@@ -44,7 +44,7 @@ public class Game {
     private int activeRound;
 
     /** Array storing the results of each round. */
-    private RoundResult[] roundResults;
+    private final RoundResult[] roundResults;
 
     /** The final result of the game after all rounds have been played. */
     private GameResult result;
@@ -60,15 +60,15 @@ public class Game {
         this.rounds = rounds;
         this.activeRound = 1;
         this.roundResults = new RoundResult[rounds];
-        this.state = GameState.IN_PROGRESS;
-        this.player1 = player;
-        player.setGamePlaying(this);
-
         this.player1Score = 0;
         this.player2Score = 0;
         this.draws = 0;
-
         this.result = null;
+
+        this.player1 = player;
+        player.setGamePlaying(this);
+
+        this.state = GameState.IN_PROGRESS;
     }
 
     /**
@@ -80,8 +80,13 @@ public class Game {
      * @throws IllegalArgumentException if rounds is less than 1 or greater than {@link #MAX_ROUNDS}
      */
     public static Game newGame(Player owner, int rounds) {
+
+        if (owner == null) {
+            throw new IllegalArgumentException("Game without a given player, can't be created");
+        }
+
         if (rounds < 1) {
-            throw new IllegalArgumentException("Rounds of the game must be a positive number!");
+            throw new IllegalArgumentException("Rounds of the game must be a positive number");
         }
 
         if (rounds > MAX_ROUNDS) {
@@ -149,7 +154,13 @@ public class Game {
      * @return true if player was successfully added; false if player is null
      */
     public boolean setPlayerTwo(Player player) {
-        if (player == null) return false;
+        if (player == null){
+            throw new IllegalArgumentException("Joining player is not valid");
+        }
+
+        if(this.player2 != null){
+            throw new IllegalStateException("Game already has 2 players");
+        }
 
         this.player2 = player;
         player.setGamePlaying(this);
@@ -163,7 +174,9 @@ public class Game {
      * @return the last {@link RoundResult} or {@code null} if no rounds have been played yet
      */
     public RoundResult getLastRoundResult() {
-        if (activeRound < 2) return null;
+        if (activeRound < 2){
+            return null;
+        }
         return roundResults[activeRound - 2];
     }
 

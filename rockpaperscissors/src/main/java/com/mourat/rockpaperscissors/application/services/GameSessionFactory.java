@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class GameSessionFactory {
 
-    private GameRulesService gameRulesService;
+    private final GameRulesService gameRulesService;
 
     /**
      * Constructs a session factory with a game rules service dependency.

@@ -1,7 +1,6 @@
 package com.mourat.rockpaperscissors.application.mappers;
 
 import com.mourat.rockpaperscissors.application.dto.ResultDto;
-import com.mourat.rockpaperscissors.application.model.GameSession;
 import com.mourat.rockpaperscissors.domain.model.Game;
 import com.mourat.rockpaperscissors.domain.model.GameState;
 import com.mourat.rockpaperscissors.domain.model.RoundResult;
@@ -13,29 +12,22 @@ import com.mourat.rockpaperscissors.domain.model.RoundResult;
 public class ResultMapper {
 
     /**
-     * Converts a {@link GameSession} domain object into a {@link ResultDto} object,
+     * Converts a {@link Game} domain object into a {@link ResultDto} object,
      * extracting and transforming relevant game result data.
      *
-     * @param gameSession the game session to map; must not be null
+     * @param game the game session to map; must not be null
      * @return a {@link ResultDto} representing the current state and results of the game session
      * @throws IllegalArgumentException if {@code gameSession} is null
      */
-    public static ResultDto toResultDto(GameSession gameSession){
+    public static ResultDto toResultDto(Game game){
 
-        if(gameSession == null) throw new IllegalArgumentException();
+        if(game == null) throw new IllegalArgumentException("Game argument must not be null");
         ResultDto resultDto = new ResultDto();
 
-        Game game = gameSession.getGame();
+        resultDto.setGameFinished(game.getState() == GameState.FINISHED);
 
-        if(game.getState() == GameState.FINISHED){
-            resultDto.setGameFinished(true);
-        }
-        else {
-            resultDto.setGameFinished(false);
-        }
-
-        resultDto.setPlayer1Name(gameSession.getPlayer1().getName());
-        resultDto.setPlayer1Id(gameSession.getPlayer1().getId().toString());
+        resultDto.setPlayer1Name(game.getPlayer1().getName());
+        resultDto.setPlayer1Id(game.getPlayer1().getId().toString());
         if(resultDto.isGameFinished()){
             resultDto.setPlayer1Score(Integer.toString(game.getResult().nOfPlayer1Wins()));
         }
@@ -43,8 +35,8 @@ public class ResultMapper {
             resultDto.setPlayer1Score(Integer.toString(game.getPlayer1Score()));
         }
 
-        resultDto.setPlayer2Name(gameSession.getPlayer2().getName());
-        resultDto.setPlayer2Id(gameSession.getPlayer2().getId().toString());
+        resultDto.setPlayer2Name(game.getPlayer2().getName());
+        resultDto.setPlayer2Id(game.getPlayer2().getId().toString());
         if(resultDto.isGameFinished()){
             resultDto.setPlayer2Score(Integer.toString(game.getResult().nOfPlayer2Wins()));
         }

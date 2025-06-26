@@ -11,13 +11,12 @@ import java.util.concurrent.CyclicBarrier;
 /**
  * Represents a game session managing the state and synchronization
  * between two players.
- *
+ * <p>
  * The session holds references to the {@link Game} and the participating {@link Player}s,
  * manages player moves, and coordinates rounds using a CyclicBarrier.
  */
 @Getter
 public class GameSession {
-
 
     /** Current state of the game session */
     SessionState state = SessionState.INIT;
@@ -26,7 +25,7 @@ public class GameSession {
     private final Game game;
 
     /** First player in the session (owner) */
-    private Player player1;
+    private final Player player1;
 
     /** First player's move for the current round */
     private Move player1Move;
@@ -78,9 +77,12 @@ public class GameSession {
         if(state != SessionState.WAITING_FOR_JOIN) return false;
 
         // Add the player as the second player and start the game
+
+        if(!game.setPlayerTwo(player)){
+            return false;
+        }
         this.player2 = player;
         player.setGameSession(this);
-        game.setPlayerTwo(player);
 
         state = SessionState.WAITING_FOR_MOVES;
         return true;
@@ -97,8 +99,8 @@ public class GameSession {
      */
     public ResultDto makeMove(Player player, Move move){
 
-        RoundResult roundResult = null;
-        GameResult gameResult = null;
+        RoundResult roundResult;
+        GameResult gameResult;
 
         if(player == null) throw new IllegalArgumentException("Player must be valid");
         if(move == null) throw new IllegalArgumentException("Move must be a valid move");
@@ -135,6 +137,6 @@ public class GameSession {
             System.out.println("Something went wrong with synchronization");
         }
 
-        return ResultMapper.toResultDto(this);
+        return ResultMapper.toResultDto(this.game);
     }
 }

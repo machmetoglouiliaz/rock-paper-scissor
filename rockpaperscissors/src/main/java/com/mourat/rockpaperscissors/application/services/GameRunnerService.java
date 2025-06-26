@@ -1,8 +1,6 @@
 package com.mourat.rockpaperscissors.application.services;
 
 import com.mourat.rockpaperscissors.application.dto.ResultDto;
-import com.mourat.rockpaperscissors.domain.model.Player;
-import org.springframework.stereotype.Service;
 
 /**
  * Application-layer service responsible for orchestrating all domain-level entities and services.

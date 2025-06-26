@@ -8,29 +8,29 @@ import lombok.Data;
  */
 @Data
 public class ResultDto {
-    private String player1Name;
-    private String player1Id;
-    private String player1Score;
+    private String player1Name = "";
+    private String player1Id = "";
+    private String player1Score = "";
 
-    private String player2Name;
-    private String player2Id;
-    private String player2Score;
+    private String player2Name = "";
+    private String player2Id = "";
+    private String player2Score = "";
 
-    private String gameId;
-    private String totalRounds;
-    private String currentRound;
+    private String gameId = "";
+    private String totalRounds = "";
+    private String currentRound = "";
 
-    private String ties;
+    private String ties = "";
 
-    private String player1LastMove;
-    private String player2LastMove;
-    private String roundWinnerPlayerName;
-    private String roundWinnerPlayerId;
+    private String player1LastMove = "";
+    private String player2LastMove = "";
+    private String roundWinnerPlayerName = "";
+    private String roundWinnerPlayerId = "";
 
-    private boolean isGameFinished;
+    private boolean isGameFinished = false;
 
-    private String gameWinnerPlayerName;
-    private String gameWinnerPlayerId;
+    private String gameWinnerPlayerName = "";
+    private String gameWinnerPlayerId = "";
 
     /**
      * Returns formatted string summarizing the current state of the game
