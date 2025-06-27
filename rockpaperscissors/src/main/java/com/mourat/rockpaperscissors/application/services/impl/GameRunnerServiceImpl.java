@@ -43,19 +43,18 @@ public class GameRunnerServiceImpl implements GameRunnerService {
     public String createGame(String playerId, int rounds) {
         Player player = this.findPlayerById(playerId);
         if (player == null) {
-            System.out.println("Player with id " + playerId + " doesn't exist");
-            return "";
+            return errorMessageHandler("Player with id \"" + playerId + "\" doesn't exist");
         }
 
-        try {
-            Game newGame = Game.newGame(player, rounds);
-            GameSession session = gameSessionFactory.createSession(player, newGame);
-            this.waitingGames.add(session);
-            return newGame.getId().toString();
-        } catch (Exception e) {
-            System.out.println("Failed to create game: " + e.getMessage());
-            return "";
+        if (rounds < 1) {
+            return errorMessageHandler("Rounds must be a positive number");
         }
+
+        Game newGame = Game.newGame(player, rounds);
+        GameSession session = gameSessionFactory.createSession(player, newGame);
+        this.waitingGames.add(session);
+        return newGame.getId().toString();
+
     }
 
     /**
@@ -64,14 +63,13 @@ public class GameRunnerServiceImpl implements GameRunnerService {
      */
     @Override
     public String createPlayer(String name) {
-        try {
-            Player newPlayer = Player.newPlayerWithName(name);
-            this.players.add(newPlayer);
-            return newPlayer.getId().toString();
-        } catch (Exception e) {
-            System.out.println("Failed to create player: " + e.getMessage());
-            return "";
+        if(name == null || name.trim().length() < 2 || name.trim().length() > 16){
+            return errorMessageHandler("Name must be between 2 and 16 characters");
         }
+
+        Player newPlayer = Player.newPlayerWithName(name);
+        this.players.add(newPlayer);
+        return newPlayer.getId().toString();
     }
 
     /**
@@ -80,30 +78,25 @@ public class GameRunnerServiceImpl implements GameRunnerService {
      */
     @Override
     public String joinGame(String playerId) {
+        if (playerId == null) {
+            return errorMessageHandler("Player id is null");
+        }
+
         Player player = this.findPlayerById(playerId);
         if (player == null) {
-            System.out.println("Player with id " + playerId + " doesn't exist");
-            return "";
+            return errorMessageHandler("Player with id \"" + playerId + "\" doesn't exist");
         }
 
         if (waitingGames.isEmpty()) {
-            System.out.println("There are no games to join");
-            return "";
+            return errorMessageHandler("There are no games to join");
         }
 
         if (player.getGameSession() != null) {
-            System.out.println("Player with id " + playerId + " is already in a session");
-            return "";
+            return errorMessageHandler("Player with id \"" + playerId + "\" is already in a session");
         }
 
         GameSession gameSession = this.waitingGames.removeFirst();
-        boolean joined = gameSession.joinGame(player);
-
-        if (!joined) {
-            System.out.println("Failed to join game");
-            return "";
-        }
-
+        gameSession.joinGame(player);
         this.activeGames.add(gameSession);
         return gameSession.getGame().getId().toString();
     }
@@ -114,27 +107,42 @@ public class GameRunnerServiceImpl implements GameRunnerService {
      */
     @Override
     public ResultDto makeMove(String playerId, String moveString) {
+        ResultDto dto = new ResultDto();
+        dto.setSuccess(false);
+
+        if (playerId == null) {
+            dto.setStatusMessage(errorMessageHandler("Player id is null"));
+            return dto;
+        }
+
         Player player = findPlayerById(playerId);
         if (player == null) {
-            System.out.println("Player with id " + playerId + " doesn't exist");
-            return null;
+            dto.setStatusMessage(errorMessageHandler("Player with id \"" + playerId + "\" doesn't exist"));
+            return dto;
         }
 
         Move move;
         try {
             move = Move.valueOf(moveString);
         } catch (IllegalArgumentException e) {
-            System.out.println("Invalid move: " + moveString);
-            return null;
+            dto.setStatusMessage(errorMessageHandler("Invalid move: \"" + moveString + "\""));
+            return dto;
         }
 
         GameSession gameSession = player.getGameSession();
         if (gameSession == null) {
-            System.out.println("Player with id " + playerId + " is not joined to any game");
-            return null;
+            dto.setStatusMessage(errorMessageHandler("Player with id \"" + playerId + "\" is not joined to any game"));
+            return dto;
         }
 
-        return gameSession.makeMove(player, move);
+        ResultDto tDto = gameSession.makeMove(player, move);
+        if(tDto.isSuccess()) {
+            return tDto;
+        }
+        else {
+            tDto.setStatusMessage(errorMessageHandler(errorMessageHandler(tDto.getStatusMessage())));
+            return tDto;
+        }
     }
 
     /**
@@ -145,7 +153,14 @@ public class GameRunnerServiceImpl implements GameRunnerService {
      */
     private Player findPlayerById(String playerId) {
 
-        UUID id = UUID.fromString(playerId);
+        UUID id;
+
+        try {
+            id = UUID.fromString(playerId);
+        } catch (Exception e) {
+            System.out.println("Given string is not in a format of UUID");
+            return null;
+        }
 
         for (Player player : players) {
             if (player.getId().equals(id)) {
@@ -154,6 +169,12 @@ public class GameRunnerServiceImpl implements GameRunnerService {
         }
 
         return null;
+    }
+
+    private String errorMessageHandler(String error){
+
+        System.out.println(error);
+        return "ERROR: " + error;
     }
 
 }

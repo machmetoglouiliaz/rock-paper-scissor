@@ -148,12 +148,21 @@ class GameTest {
     }
 
     @Test
-    void setPlayerTwo_validPlayerToFullGame_throwsIllegalStateException() {
+    void setPlayerTwo_validPlayerToFullGame_returnsFalse() {
         Game game = getGameWithTwoPlayers(2);
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> game.setPlayerTwo(Player.newPlayerWithName("test3")));
+        boolean result = game.setPlayerTwo(Player.newPlayerWithName("test3"));
 
-        assertEquals("Game already has 2 players", exception.getMessage());
+        assertFalse(result);
         assertEquals("test2", game.getPlayer2().getName());
+    }
+
+    @Test
+    void setPlayerTwo_samePlayer_returnsFalse() {
+        Game game = Game.newGame(Player.newPlayerWithName("test"), 1);
+        boolean result = game.setPlayerTwo(game.getPlayer1());
+
+        assertFalse(result);
+        assertNull(game.getPlayer2());
     }
 
     @Test

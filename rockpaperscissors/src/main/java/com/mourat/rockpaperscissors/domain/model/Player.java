@@ -51,4 +51,14 @@ public class Player {
         }
         return new Player(name);
     }
+
+    /**
+     * Detaches this player from any currently associated game and game session.
+     * <p>
+     * Sets both {@code gameSession} and {@code gamePlaying} to {@code null}.
+     */
+    public void detachGame(){
+        this.gameSession = null;
+        this.gamePlaying = null;
+    }
 }

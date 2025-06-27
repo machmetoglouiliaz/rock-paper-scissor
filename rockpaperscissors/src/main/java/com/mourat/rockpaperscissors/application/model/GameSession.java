@@ -67,17 +67,21 @@ public class GameSession {
      *
      * @param player the player attempting to join
      * @return {@code true} if the player successfully joined, {@code false} otherwise
+     * @throws IllegalArgumentException if {@code player} is {@code null}
      */
     public synchronized boolean joinGame(Player player){
 
         // If the player is not valid abort joining
-        if(player == null) return false;
+        if(player == null){
+            throw new IllegalArgumentException("Player must be valid to join a game");
+        }
 
         // If the session is not in a state waiting for player to join, abort the command
-        if(state != SessionState.WAITING_FOR_JOIN) return false;
+        if(state != SessionState.WAITING_FOR_JOIN) {
+            return false;
+        }
 
         // Add the player as the second player and start the game
-
         if(!game.setPlayerTwo(player)){
             return false;
         }
@@ -101,19 +105,34 @@ public class GameSession {
 
         RoundResult roundResult;
         GameResult gameResult;
+        ResultDto dto = new ResultDto();
 
-        if(player == null) throw new IllegalArgumentException("Player must be valid");
-        if(move == null) throw new IllegalArgumentException("Move must be a valid move");
+        if(player == null){
+            throw new IllegalArgumentException("Player must be valid");
+        }
+
+        if(move == null){
+            throw new IllegalArgumentException("Move must be a valid move");
+        }
+
+        if(state != SessionState.WAITING_FOR_MOVES){
+            dto.setSuccess(false);
+            dto.setStatusMessage("Cant make move in this state of session");
+            return dto;
+        }
 
         // Assign the move to the correct player
-        if( player.getId().equals(this.player1.getId()) && this.player1Move == null){
+        if(player.getId().equals(this.player1.getId()) && this.player1Move == null){
             this.player1Move = move;
-
-        } else if (player.getId().equals(this.player2.getId()) && this.player2Move == null) {
+        }
+        else if (player.getId().equals(this.player2.getId()) && this.player2Move == null) {
             this.player2Move = move;
-        } else {
+        }
+        else {
             // Duplicate or invalid move
-            return null;
+            dto.setSuccess(false);
+            dto.setStatusMessage("Invalid move or multiple moves from same player");
+            return dto;
         }
 
         // If both players have submitted, resolve the round
@@ -127,14 +146,16 @@ public class GameSession {
             player2Move = null;
             this.state = SessionState.WAITING_FOR_MOVES;
 
-            if(gameResult != null) this.state = SessionState.TERMINATED;
+            if(gameResult != null) {
+                this.state = SessionState.TERMINATED;
+            }
         }
 
         // Wait for both players to reach this point before proceeding
         try {
             roundBarrier.await();
         }catch(Exception e){
-            System.out.println("Something went wrong with synchronization");
+            System.out.println("Something went wrong with synchronization, the returning result could be corrupted");
         }
 
         return ResultMapper.toResultDto(this.game);

@@ -144,6 +144,9 @@ public class Game {
         this.result = new GameResult(player1Score, player2Score, draws, winner);
         this.state = GameState.FINISHED;
 
+        this.player1.detachGame();
+        this.player2.detachGame();
+
         return this.result;
     }
 
@@ -151,7 +154,7 @@ public class Game {
      * Adds the second player to the game.
      *
      * @param player the {@link Player} to join as player two
-     * @return true if player was successfully added; false if player is null
+     * @return true if player was successfully added
      */
     public boolean setPlayerTwo(Player player) {
         if (player == null){
@@ -159,7 +162,11 @@ public class Game {
         }
 
         if(this.player2 != null){
-            throw new IllegalStateException("Game already has 2 players");
+            return false;
+        }
+
+        if(player.equals(this.player1)){
+            return false;
         }
 
         this.player2 = player;

@@ -32,6 +32,9 @@ public class ResultDto {
     private String gameWinnerPlayerName = "";
     private String gameWinnerPlayerId = "";
 
+    private boolean isSuccess = true;
+    private String statusMessage = "Success";
+
     /**
      * Returns formatted string summarizing the current state of the game
      *
