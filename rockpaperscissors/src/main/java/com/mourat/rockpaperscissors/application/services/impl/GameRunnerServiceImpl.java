@@ -7,6 +7,8 @@ import com.mourat.rockpaperscissors.application.services.GameSessionFactory;
 import com.mourat.rockpaperscissors.domain.model.Game;
 import com.mourat.rockpaperscissors.domain.model.Move;
 import com.mourat.rockpaperscissors.domain.model.Player;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,8 @@ import java.util.UUID;
 
 @Service
 public class GameRunnerServiceImpl implements GameRunnerService {
+
+    private static final Logger logger = LoggerFactory.getLogger(GameRunnerServiceImpl.class);
 
     private final List<Player> players;
     private final List<GameSession> activeGames;
@@ -53,7 +57,10 @@ public class GameRunnerServiceImpl implements GameRunnerService {
         Game newGame = Game.newGame(player, rounds);
         GameSession session = gameSessionFactory.createSession(player, newGame);
         this.waitingGames.add(session);
-        return newGame.getId().toString();
+
+        String gameId = newGame.getId().toString();
+        logger.info("New game created successfully with id \"{}\" by the player \"{}\": \"{}\"", gameId, player.getName(), playerId);
+        return gameId;
 
     }
 
@@ -64,12 +71,15 @@ public class GameRunnerServiceImpl implements GameRunnerService {
     @Override
     public String createPlayer(String name) {
         if(name == null || name.trim().length() < 2 || name.trim().length() > 16){
-            return errorMessageHandler("Name must be between 2 and 16 characters");
+            return errorMessageHandler("Player name must be between 2 and 16 characters");
         }
 
         Player newPlayer = Player.newPlayerWithName(name);
         this.players.add(newPlayer);
-        return newPlayer.getId().toString();
+
+        String playerId = newPlayer.getId().toString();
+        logger.info("New player created successfully with name \"{}\" and id \"{}\"", name, playerId);
+        return playerId;
     }
 
     /**
@@ -98,7 +108,10 @@ public class GameRunnerServiceImpl implements GameRunnerService {
         GameSession gameSession = this.waitingGames.removeFirst();
         gameSession.joinGame(player);
         this.activeGames.add(gameSession);
-        return gameSession.getGame().getId().toString();
+
+        String gameId = gameSession.getGame().getId().toString();
+        logger.info("Player with name \"{}\" and id \"{}\" joined to the game with id \"{}\" successfully", player.getName(), playerId, gameId);
+        return gameId;
     }
 
     /**
@@ -137,16 +150,18 @@ public class GameRunnerServiceImpl implements GameRunnerService {
 
         ResultDto tDto = gameSession.makeMove(player, move);
         if(tDto.isSuccess()) {
+            logger.debug("Player \"{}\":\"{}\" played \"{}\" successfully...", player.getName(), playerId, move);
             return tDto;
         }
         else {
+            logger.debug("Player \"{}\":\"{}\" can't play \"{}\"...", player.getName(), playerId, move);
             tDto.setStatusMessage(errorMessageHandler(errorMessageHandler(tDto.getStatusMessage())));
             return tDto;
         }
     }
 
     /**
-     * Finds a player object from the list by matching id.
+     * Finds a player object from the list with a matching id.
      *
      * @param playerId string representation of a player id
      * @return the player if found, otherwise null
@@ -158,7 +173,7 @@ public class GameRunnerServiceImpl implements GameRunnerService {
         try {
             id = UUID.fromString(playerId);
         } catch (Exception e) {
-            System.out.println("Given string is not in a format of UUID");
+            logger.error("The \"{}\" is not in a format of UUID", playerId);
             return null;
         }
 
@@ -171,9 +186,15 @@ public class GameRunnerServiceImpl implements GameRunnerService {
         return null;
     }
 
+    /**
+     * Logs the error and sends it back formatted
+     *
+     * @param error message to be processed
+     * @return formatted error message
+     */
     private String errorMessageHandler(String error){
 
-        System.out.println(error);
+        logger.error(error);
         return "ERROR: " + error;
     }
 

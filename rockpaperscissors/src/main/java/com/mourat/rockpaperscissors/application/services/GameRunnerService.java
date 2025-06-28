@@ -18,7 +18,7 @@ public interface GameRunnerService {
      *
      * @param playerId the ID of the player creating the game
      * @param rounds the number of rounds the game will run
-     * @return the ID of the newly created game; an empty string if creation failed
+     * @return the ID of the newly created game as string on success; an error message otherwise
      */
     String createGame(String playerId, int rounds);
 
@@ -26,7 +26,7 @@ public interface GameRunnerService {
      * Creates a new player with the given name.
      *
      * @param name the name of the new player
-     * @return the ID of the newly created player; an empty string if creation failed
+     * @return the ID of the newly created player on success; an error message otherwise
      */
     String createPlayer(String name);
 
@@ -34,7 +34,7 @@ public interface GameRunnerService {
      * Allows a player to join an existing open game session.
      *
      * @param playerId the ID of the player attempting to join
-     * @return the ID of the joined game; an empty string if join failed
+     * @return the ID of the joined game on success; an error message otherwise
      */
     String joinGame(String playerId);
 
@@ -43,7 +43,7 @@ public interface GameRunnerService {
      *
      * @param playerId the ID of the player making the move
      * @param move the move made by the player (e.g., "ROCK", "PAPER", "SCISSORS")
-     * @return a {@link ResultDto} containing the result of the round and current game state
+     * @return a {@link ResultDto} containing the result of the round and current game state with a status message
      */
     ResultDto makeMove(String playerId, String move);
 }

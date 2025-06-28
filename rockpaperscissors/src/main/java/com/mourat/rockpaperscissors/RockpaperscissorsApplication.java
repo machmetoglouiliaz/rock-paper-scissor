@@ -15,7 +15,7 @@ import java.util.Random;
 @SpringBootApplication
 public class RockpaperscissorsApplication {
 
-    public static final Logger logger = LoggerFactory.getLogger(RockpaperscissorsApplication.class);
+    private static final Logger logger = LoggerFactory.getLogger(RockpaperscissorsApplication.class);
 
     private GameRunnerService gameRunnerService;
     private final int iterations = 2;
@@ -122,7 +122,7 @@ public class RockpaperscissorsApplication {
         for (int i = 0; i < iterations; i++) {
             logger.info(botName + ": Iteration: " + i);
 
-            logger.info(botName + ": " + (isCreator ? "Creating" : "Joining") + " game...");
+            logger.info(botName + ": " + (isCreator ? "Creating new" : "Joining to") + " game...");
             try {
                 gameId = createOrJoinGame(isCreator, playerId, rounds);
 				logger.info(botName + ": Entered game with id:" + gameId);
