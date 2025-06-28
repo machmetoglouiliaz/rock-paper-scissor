@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <!-- Console output -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] %logger{1} [%t] %-5level - %msg%n" />
+        </Console>
+
+        <!-- Info file appender -->
+        <File name="InfoFile" fileName="logs/info.log" append="true">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] %logger{1} %-5level - %msg%n" />
+            <Filters>
+                <!-- Accept INFO only-->
+                <LevelRangeFilter minLevel="info" maxLevel="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+        </File>
+
+        <!-- Error file appender -->
+        <File name="ErrorFile" fileName="logs/error.log" append="true">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] %logger{1} %-5level - %msg%n" />
+            <Filters>
+                <!-- Accept WARN and higher -->
+                <ThresholdFilter level="warn" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+        </File>
+
+        <!-- Dedicated records file -->
+        <File name="RecordsFile" fileName="logs/records.log" append="true">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] %msg%n"/>
+        </File>
+    </Appenders>
+
+    <Loggers>
+        <!-- Dedicated logger for records -->
+        <Logger name="recordsLogger" level="info" additivity="false">
+            <AppenderRef ref="RecordsFile"/>
+        </Logger>
+
+        <!-- Root logger for normal app logging -->
+        <Root level="info">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="InfoFile" />
+            <AppenderRef ref="ErrorFile" />
+        </Root>
+    </Loggers>
+</Configuration>

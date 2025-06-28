@@ -2,6 +2,8 @@ package com.mourat.rockpaperscissors;
 
 import com.mourat.rockpaperscissors.application.dto.ResultDto;
 import com.mourat.rockpaperscissors.application.services.GameRunnerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,92 +15,136 @@ import java.util.Random;
 @SpringBootApplication
 public class RockpaperscissorsApplication {
 
-	private GameRunnerService gameRunnerService;
-	private final int iterations = 2;
+    public static final Logger logger = LoggerFactory.getLogger(RockpaperscissorsApplication.class);
 
-	public static void main(String[] args) {
-		SpringApplication.run(RockpaperscissorsApplication.class, args);
-	}
+    private GameRunnerService gameRunnerService;
+    private final int iterations = 2;
+    int roundsPerGame = 100; // This number has no meaning for game joining players - isCreatingGame = false
 
-	@Bean
-	public CommandLineRunner commandLineRunner(GameRunnerService gameRunnerService){
+    public static void main(String[] args) {
+        SpringApplication.run(RockpaperscissorsApplication.class, args);
+    }
 
-		this.gameRunnerService = gameRunnerService;
+    @Bean
+    public CommandLineRunner commandLineRunner(GameRunnerService gameRunnerService) {
 
-		return runner -> simulateGame();
-	}
+        this.gameRunnerService = gameRunnerService;
 
-	private void simulateGame(){
+        return runner -> simulateGame();
+    }
 
-		Thread bot1 = new Thread(this::botOne);
-		Thread bot2 = new Thread(this::botTwo);
+    private void simulateGame() {
 
-		bot1.start();
-		bot2.start();
+        Thread bot1 = new Thread(this::botOne);
+        Thread bot2 = new Thread(this::botTwo);
 
-	}
+        bot1.start();
+        bot2.start();
 
-
-	public void botTwo(){
-
-		String[] moveSet = {"ROCK", "PAPER", "SCISSORS"};
-		Random random = new Random();
-
-		String playerId = gameRunnerService.createPlayer("Player B");;
-
-		ResultDto result;
-		String gameId;
-
-		System.out.println("I'm bot 2");
-		System.out.println("BOT 2: player id:" + playerId);
-
-		for(int i = 0; i < iterations; i++){
-			System.out.println("BOT 2: Iteration: " + i);
-
-			do {
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException _) {
-				}
-				gameId = gameRunnerService.joinGame(playerId);
-			} while (gameId.isEmpty());
-			System.out.println("BOT 2: game id:" + gameId);
+    }
 
 
-			do {
-				result = gameRunnerService.makeMove(playerId, moveSet[random.nextInt(3)]);
-			} while (result == null || Integer.parseInt(result.getCurrentRound()) != Integer.parseInt(result.getTotalRounds()) + 1);
+    public void botTwo() {
 
-			System.out.println("BOT 2: \n" + result +"\n\n");
-		}
+        String[] moveSet = {"ROCK", "PAPER", "SCISSORS"};
+        String playerName = "Player B";
+        String botName = "BOT 2";
+        boolean isCreatingGame = false;
 
-	}
+        iterateSimulationFor(botName, playerName, isCreatingGame, roundsPerGame, moveSet);
+
+    }
 
 
-	public void botOne(){
+    public void botOne() {
 
-		int rounds = 100;
-		String playerId = gameRunnerService.createPlayer("Player A");
-		String gameId;
+        String[] moveSet = {"PAPER"};
+        String playerName = "Player A";
+        String botName = "BOT 1";
+        boolean isCreatingGame = true;
 
-		ResultDto result;
+        iterateSimulationFor(botName, playerName, isCreatingGame, roundsPerGame, moveSet);
 
-		System.out.println("I'm bot 1");
-		System.out.println("BOT 1: player id:" + playerId);
-		for(int i = 0; i < iterations; i++) {
-			System.out.println("BOT 1: Iteration: " + i);
+    }
 
-			gameId = gameRunnerService.createGame(playerId, rounds);
-			System.out.println("BOT 1: game id:" + gameId);
-			do {
-				result = gameRunnerService.makeMove(playerId, "PAPER");
-				if(result == null){
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException _) {}
+    private String initializePlayerFor(String botName, String playerName) {
+
+        logger.info(botName + ": Initializing...");
+        logger.info(botName + ": Creating player with name " + playerName);
+        String playerId = gameRunnerService.createPlayer(playerName);
+        if (playerId.contains("ERROR")) {
+            logger.info(botName + ": Player creation ended with error: " + playerId + "   - Check error.log for more info!");
+            return playerId;
+        }
+        logger.info(botName + ": Player created successfully!");
+        logger.info(botName + ": player id:" + playerId);
+
+        return playerId;
+    }
+
+    private ResultDto playGame(String playerId, String[] moveSet) throws Exception {
+
+        Random random = new Random();
+        ResultDto result;
+
+        do {
+            result = gameRunnerService.makeMove(playerId, moveSet[random.nextInt(moveSet.length)]);
+            if (result == null || !result.isSuccess()) {
+                sleepABit();
+            }
+        } while (result == null || !result.isGameFinished());
+
+        return result;
+    }
+
+    private String createOrJoinGame(boolean isCreator, String playerId, int rounds) throws Exception {
+        String gameId = "";
+
+        if (isCreator) {
+            gameId = gameRunnerService.createGame(playerId, rounds);
+        } else {
+            while (gameId.isEmpty() || gameId.contains("ERROR")) {
+                gameId = gameRunnerService.joinGame(playerId);
+                if (gameId.isEmpty() || gameId.contains("ERROR")) {
+                    sleepABit();
                 }
-			} while (result == null || Integer.parseInt(result.getCurrentRound()) != Integer.parseInt(result.getTotalRounds()) + 1);
-		}
+            }
+        }
 
+        return gameId;
+    }
+
+    private void iterateSimulationFor(String botName, String playerName, boolean isCreator, int rounds, String[] moveSet) {
+        String gameId;
+        String playerId = initializePlayerFor(botName, playerName);
+        ResultDto result;
+
+        for (int i = 0; i < iterations; i++) {
+            logger.info(botName + ": Iteration: " + i);
+
+            logger.info(botName + ": " + (isCreator ? "Creating" : "Joining") + " game...");
+            try {
+                gameId = createOrJoinGame(isCreator, playerId, rounds);
+				logger.info(botName + ": Entered game with id:" + gameId);
+
+				result = playGame(playerId, moveSet);
+				logger.info(botName + ": Game ended with message " + result.getStatusMessage());
+            } catch (Exception e) {
+                logger.error(botName + ": " + e.getMessage());
+                return;
+            }
+
+            if (isCreator) {
+                logger.info(botName + ": \n" + result + "\n\n");
+            }
+        }
+    }
+
+	private void sleepABit() throws Exception {
+		try {
+			Thread.sleep(100);
+		} catch (Exception e) {
+			throw new Exception("Something went wrong with sleep");
+		}
 	}
 }
