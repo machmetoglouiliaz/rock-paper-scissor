@@ -18,7 +18,7 @@ public class RockpaperscissorsApplication {
     private static final Logger logger = LoggerFactory.getLogger(RockpaperscissorsApplication.class);
 
     private GameRunnerService gameRunnerService;
-    private final int iterations = 2;
+    private final int iterations = 1;
     int roundsPerGame = 100; // This number has no meaning for game joining players - isCreatingGame = false
 
     public static void main(String[] args) {
@@ -69,15 +69,15 @@ public class RockpaperscissorsApplication {
 
     private String initializePlayerFor(String botName, String playerName) {
 
-        logger.info(botName + ": Initializing...");
-        logger.info(botName + ": Creating player with name " + playerName);
+        logger.info("{}: Initializing...", botName);
+        logger.info("{}: Creating player with name {}", botName, playerName);
         String playerId = gameRunnerService.createPlayer(playerName);
         if (playerId.contains("ERROR")) {
-            logger.info(botName + ": Player creation ended with error: " + playerId + "   - Check error.log for more info!");
+            logger.info("{}: Player creation ended with error: {}  - Check error.log for more info!", botName, playerId);
             return playerId;
         }
-        logger.info(botName + ": Player created successfully!");
-        logger.info(botName + ": player id:" + playerId);
+        logger.info("{}: Player created successfully!", botName);
+        logger.info("{}: player id: {}", botName, playerId);
 
         return playerId;
     }
@@ -120,22 +120,23 @@ public class RockpaperscissorsApplication {
         ResultDto result;
 
         for (int i = 0; i < iterations; i++) {
-            logger.info(botName + ": Iteration: " + i);
+            logger.info("{}: Iteration: {}", botName, i);
 
-            logger.info(botName + ": " + (isCreator ? "Creating new" : "Joining to") + " game...");
+            logger.info("{}: {} game...", botName, (isCreator ? "Creating new" : "Joining to"));
             try {
                 gameId = createOrJoinGame(isCreator, playerId, rounds);
-				logger.info(botName + ": Entered game with id:" + gameId);
+				logger.info("{}: Entered game with id: {}", botName, gameId);
 
 				result = playGame(playerId, moveSet);
-				logger.info(botName + ": Game ended with message " + result.getStatusMessage());
+				logger.info("{}: Game ended with message {}", botName, result.getStatusMessage());
             } catch (Exception e) {
-                logger.error(botName + ": " + e.getMessage());
+                logger.error("{}: {}",botName, e.getMessage());
                 return;
             }
 
             if (isCreator) {
-                logger.info(botName + ": \n" + result + "\n\n");
+                logger.info("{}: \n{}\n\n", botName, result);
+                tyntecOutputFormater(result);
             }
         }
     }
@@ -147,4 +148,10 @@ public class RockpaperscissorsApplication {
 			throw new Exception("Something went wrong with sleep");
 		}
 	}
+
+    private void tyntecOutputFormater(ResultDto result){
+        System.out.println("\"" + result.getPlayer1Name() + " wins " + result.getPlayer1Score() + " of " + result.getTotalRounds() + " games\"");
+        System.out.println("\"" + result.getPlayer2Name() + " wins " + result.getPlayer2Score() + " of " + result.getTotalRounds() + " games\"");
+        System.out.println("\"Tie:  " + result.getTies() + " of " + result.getTotalRounds() + " games\"");
+    }
 }

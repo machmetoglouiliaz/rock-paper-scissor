@@ -3,6 +3,8 @@ package com.mourat.rockpaperscissors.domain.model;
 import com.mourat.rockpaperscissors.application.model.GameSession;
 import lombok.Getter;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
@@ -12,6 +14,8 @@ import java.util.UUID;
  */
 @Getter
 public class Player {
+
+    private static final Logger logger = LoggerFactory.getLogger(Player.class);
 
     /** Unique player ID. */
     private final UUID id;
@@ -36,6 +40,7 @@ public class Player {
     private Player(String name) {
         this.id = UUID.randomUUID();
         this.name = name;
+        logger.debug("A player with name {} and id {} is created", name, id);
     }
 
     /**
@@ -47,6 +52,7 @@ public class Player {
      */
     public static Player newPlayerWithName(String name) {
         if (name == null || name.trim().length() < 2 || name.trim().length() > 16) {
+            logger.error("The name of the player must be between 2 and 16 characters.");
             throw new IllegalArgumentException("Name must be between 2 and 16 characters");
         }
         return new Player(name);
@@ -58,6 +64,7 @@ public class Player {
      * Sets both {@code gameSession} and {@code gamePlaying} to {@code null}.
      */
     public void detachGame(){
+        logger.debug("Player {} detached from game {}", id, gamePlaying.getId());
         this.gameSession = null;
         this.gamePlaying = null;
     }

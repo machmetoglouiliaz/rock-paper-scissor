@@ -63,35 +63,35 @@ class GameRunnerServiceImplTest {
     void createPlayer_nullName_returnsErrorMessage() {
         String errorMessage = service.createPlayer(null);
 
-        assertEquals("ERROR: Name must be between 2 and 16 characters", errorMessage);
+        assertEquals("ERROR: Player name must be between 2 and 16 characters", errorMessage);
     }
 
     @Test
     void createPlayer_emptyName_returnsErrorMessage() {
         String errorMessage = service.createPlayer("");
 
-        assertEquals("ERROR: Name must be between 2 and 16 characters", errorMessage);
+        assertEquals("ERROR: Player name must be between 2 and 16 characters", errorMessage);
     }
 
     @Test
     void createPlayer_whiteSpaceName_returnsErrorMessage() {
         String errorMessage = service.createPlayer("      ");
 
-        assertEquals("ERROR: Name must be between 2 and 16 characters", errorMessage);
+        assertEquals("ERROR: Player name must be between 2 and 16 characters", errorMessage);
     }
 
     @Test
     void createPlayer_shortName_returnsErrorMessage() {
         String errorMessage = service.createPlayer(" a  ");
 
-        assertEquals("ERROR: Name must be between 2 and 16 characters", errorMessage);
+        assertEquals("ERROR: Player name must be between 2 and 16 characters", errorMessage);
     }
 
     @Test
     void createPlayer_longName_returnsErrorMessage() {
         String errorMessage = service.createPlayer("1t2t3t4t5t6t7t8t9t");
 
-        assertEquals("ERROR: Name must be between 2 and 16 characters", errorMessage);
+        assertEquals("ERROR: Player name must be between 2 and 16 characters", errorMessage);
     }
 
     @Test

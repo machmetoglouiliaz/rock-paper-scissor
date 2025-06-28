@@ -4,6 +4,8 @@ import com.mourat.rockpaperscissors.application.model.GameSession;
 import com.mourat.rockpaperscissors.domain.model.Game;
 import com.mourat.rockpaperscissors.domain.model.Player;
 import com.mourat.rockpaperscissors.domain.service.GameRulesService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class GameSessionFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(GameSessionFactory.class);
 
     private final GameRulesService gameRulesService;
 
@@ -37,11 +41,15 @@ public class GameSessionFactory {
      */
     public GameSession createSession(Player owner, Game game){
         if(owner == null){
+            logger.error("Session creation in session factory can't continue, owner of the session is null and it is not allowed");
             throw new IllegalArgumentException("Creator of the session cant be invalid");
         }
         if(game == null){
+            logger.error("Session creation in session factory can't continue, game of the session is null and it is not allowed");
             throw new IllegalArgumentException("Game of the session cant be invalid");
         }
+
+        logger.debug("Session factory creating a new session for the game \"{}\" by player \"{}\":\"{}\"...", game.getId(), owner.getName(), owner.getId());
         return new GameSession(owner, game, gameRulesService);
     }
 }

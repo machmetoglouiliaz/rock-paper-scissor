@@ -5,6 +5,8 @@ import com.mourat.rockpaperscissors.application.mappers.ResultMapper;
 import com.mourat.rockpaperscissors.domain.model.*;
 import com.mourat.rockpaperscissors.domain.service.GameRulesService;
 import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CyclicBarrier;
 
@@ -17,6 +19,8 @@ import java.util.concurrent.CyclicBarrier;
  */
 @Getter
 public class GameSession {
+
+    private Logger logger = LoggerFactory.getLogger(GameSession.class);
 
     /** Current state of the game session */
     SessionState state = SessionState.INIT;
@@ -59,6 +63,8 @@ public class GameSession {
         this.player2Move = null;
 
         this.gameRulesService = gameRulesService;
+
+        logger.debug("New session for the game \"{}\" by player \"{}\":\"{}\" successfully created", game.getId(), owner.getName(), owner.getId());
     }
 
     /**
@@ -73,22 +79,26 @@ public class GameSession {
 
         // If the player is not valid abort joining
         if(player == null){
+            logger.error("This code should never be executed! Join attempt by a null player, joining player can't be null. On this call, player is never null, check for corruption");
             throw new IllegalArgumentException("Player must be valid to join a game");
         }
 
         // If the session is not in a state waiting for player to join, abort the command
         if(state != SessionState.WAITING_FOR_JOIN) {
+            logger.warn("Join attempt to a game with state \"{}\" can't be done, the state of the session must be \"{}\" to be joined", state, SessionState.WAITING_FOR_JOIN);
             return false;
         }
 
         // Add the player as the second player and start the game
         if(!game.setPlayerTwo(player)){
+            logger.warn("Can't complete the joining process, denied by domain layer");
             return false;
         }
         this.player2 = player;
         player.setGameSession(this);
 
         state = SessionState.WAITING_FOR_MOVES;
+        logger.debug("Player's join request processed successfully by the session...");
         return true;
     }
 
@@ -98,7 +108,7 @@ public class GameSession {
      *
      * @param player the player submitting a move
      * @param move the move made by the player
-     * @return a {@link ResultDto} representing the current game state; {@code null} if move was ignored
+     * @return a {@link ResultDto} representing the current game state
      * @throws IllegalArgumentException if the player or move is null
      */
     public ResultDto makeMove(Player player, Move move){
@@ -108,16 +118,19 @@ public class GameSession {
         ResultDto dto = new ResultDto();
 
         if(player == null){
+            logger.error("This code should never be executed! Move can't be made by a null player. On this call, player is never null, check for corruption");
             throw new IllegalArgumentException("Player must be valid");
         }
 
         if(move == null){
+            logger.error("This code should never be executed! Move can't be null. On this call, move is never null, check for corruption");
             throw new IllegalArgumentException("Move must be a valid move");
         }
 
         if(state != SessionState.WAITING_FOR_MOVES){
             dto.setSuccess(false);
             dto.setStatusMessage("Cant make move in this state of session");
+            logger.warn("The session is not in a state to accept move requests");
             return dto;
         }
 
@@ -131,7 +144,8 @@ public class GameSession {
         else {
             // Duplicate or invalid move
             dto.setSuccess(false);
-            dto.setStatusMessage("Invalid move or multiple moves from same player");
+            dto.setStatusMessage("Invalid player or multiple moves from same player");
+            logger.error("The player trying to make the move is not this session's player, or same player trying to make a move again. Check for thread sync or corruption");
             return dto;
         }
 
@@ -147,6 +161,7 @@ public class GameSession {
             this.state = SessionState.WAITING_FOR_MOVES;
 
             if(gameResult != null) {
+                logger.info("Session with the game id \"{}\" is ended", game.getId());
                 this.state = SessionState.TERMINATED;
             }
         }
@@ -155,7 +170,8 @@ public class GameSession {
         try {
             roundBarrier.await();
         }catch(Exception e){
-            System.out.println("Something went wrong with synchronization, the returning result could be corrupted");
+            logger.error("Something went wrong with synchronization, the returning result can be corrupted");
+            System.out.println("Something went wrong with synchronization, the returning result can be corrupted");
         }
 
         return ResultMapper.toResultDto(this.game);

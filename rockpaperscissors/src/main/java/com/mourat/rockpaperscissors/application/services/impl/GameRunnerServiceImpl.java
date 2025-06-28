@@ -106,7 +106,10 @@ public class GameRunnerServiceImpl implements GameRunnerService {
         }
 
         GameSession gameSession = this.waitingGames.removeFirst();
-        gameSession.joinGame(player);
+        if(!gameSession.joinGame(player)){
+            logger.error("This code segment is unreachable by any normal flow, must have an internal domain level corruption");
+            throw new IllegalStateException("An internal error occurred");
+        }
         this.activeGames.add(gameSession);
 
         String gameId = gameSession.getGame().getId().toString();
@@ -155,7 +158,7 @@ public class GameRunnerServiceImpl implements GameRunnerService {
         }
         else {
             logger.debug("Player \"{}\":\"{}\" can't play \"{}\"...", player.getName(), playerId, move);
-            tDto.setStatusMessage(errorMessageHandler(errorMessageHandler(tDto.getStatusMessage())));
+            tDto.setStatusMessage(errorMessageHandler(tDto.getStatusMessage()));
             return tDto;
         }
     }
@@ -173,7 +176,7 @@ public class GameRunnerServiceImpl implements GameRunnerService {
         try {
             id = UUID.fromString(playerId);
         } catch (Exception e) {
-            logger.error("The \"{}\" is not in a format of UUID", playerId);
+            logger.warn("The \"{}\" is not in a format of UUID", playerId);
             return null;
         }
 
@@ -194,7 +197,7 @@ public class GameRunnerServiceImpl implements GameRunnerService {
      */
     private String errorMessageHandler(String error){
 
-        logger.error(error);
+        logger.warn(error);
         return "ERROR: " + error;
     }
 

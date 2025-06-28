@@ -4,6 +4,8 @@ import com.mourat.rockpaperscissors.domain.model.Move;
 import com.mourat.rockpaperscissors.domain.model.Player;
 import com.mourat.rockpaperscissors.domain.model.RoundResult;
 import com.mourat.rockpaperscissors.domain.service.GameRulesService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -13,16 +15,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class GameRulesServiceImpl implements GameRulesService {
 
+    private static Logger logger = LoggerFactory.getLogger(GameRulesServiceImpl.class);
     /**
      * {@inheritDoc}
      */
     @Override
     public RoundResult checkRoundWinner(Player player1, Move player1Move, Player player2, Move player2Move) {
         if (player1 == null || player2 == null) {
+            logger.error("Players can't be null on record creation. Check for corruption");
             throw new IllegalArgumentException("Players can't be null.");
         }
 
         if (player1Move == null || player2Move == null) {
+            logger.error("Moves can't be null on record creation. Check for corruption");
             throw new IllegalArgumentException("Moves can't be null.");
         }
 

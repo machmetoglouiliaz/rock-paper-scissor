@@ -4,12 +4,16 @@ import com.mourat.rockpaperscissors.application.dto.ResultDto;
 import com.mourat.rockpaperscissors.domain.model.Game;
 import com.mourat.rockpaperscissors.domain.model.GameState;
 import com.mourat.rockpaperscissors.domain.model.RoundResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class responsible for mapping domain objects related to the game session
  * into Data Transfer Objects (DTOs) for communication layer.
  */
 public class ResultMapper {
+
+    private static final Logger logger = LoggerFactory.getLogger(ResultMapper.class);
 
     /**
      * Converts a {@link Game} domain object into a {@link ResultDto} object,
@@ -21,7 +25,11 @@ public class ResultMapper {
      */
     public static ResultDto toResultDto(Game game){
 
-        if(game == null) throw new IllegalArgumentException("Game argument must not be null");
+        if(game == null){
+            logger.error("The game given to the mapper is null, can't map a null game to a Data Transfer Object (DTO)");
+            throw new IllegalArgumentException("Game argument must not be null");
+        }
+        logger.debug("Creating a Data Transfer Object (DTO) for the last turn of the game with id \"{}\"", game.getId());
         ResultDto resultDto = new ResultDto();
 
         resultDto.setGameFinished(game.getState() == GameState.FINISHED);

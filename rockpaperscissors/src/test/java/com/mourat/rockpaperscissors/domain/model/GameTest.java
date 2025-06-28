@@ -69,7 +69,7 @@ class GameTest {
 
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> game.playRound(new RoundResult(Move.ROCK, Move.PAPER,game.getPlayer2())));
-        assertEquals("The game state is not in progress, can't play the round", exception.getMessage());
+        assertEquals("The game is not in progress, can't play the round", exception.getMessage());
         assertEquals(1, game.getRoundResults().length);
     }
 

@@ -1,6 +1,8 @@
 package com.mourat.rockpaperscissors.domain.model;
 
 import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
@@ -12,6 +14,9 @@ import java.util.UUID;
  */
 @Getter
 public class Game {
+
+    private static final Logger logger = LoggerFactory.getLogger(Game.class);
+    private static final Logger recordLogger = LoggerFactory.getLogger("recordsLogger");
 
     /** Maximum allowed rounds in a game. */
     public static final int MAX_ROUNDS = 100;
@@ -69,6 +74,7 @@ public class Game {
         player.setGamePlaying(this);
 
         this.state = GameState.IN_PROGRESS;
+        logger.debug("A game with id \"{}\" is created by player \"{}\"", id, player.getName());
     }
 
     /**
@@ -82,14 +88,17 @@ public class Game {
     public static Game newGame(Player owner, int rounds) {
 
         if (owner == null) {
+            logger.error("This code should never be executed! Null player reached domain layer. New game can't be created by a null player. On this call, player is never null, check for corruption");
             throw new IllegalArgumentException("Game without a given player, can't be created");
         }
 
         if (rounds < 1) {
+            logger.warn("A try for new game creation with invalid round count occurred");
             throw new IllegalArgumentException("Rounds of the game must be a positive number");
         }
 
         if (rounds > MAX_ROUNDS) {
+            logger.warn("A try for new game creation with invalid round count occurred");
             throw new IllegalArgumentException("The game can have max " + MAX_ROUNDS + " rounds!");
         }
 
@@ -106,10 +115,14 @@ public class Game {
      * @throws IllegalArgumentException if {@code roundResult} is null
      */
     public GameResult playRound(RoundResult roundResult) {
-        if (state != GameState.IN_PROGRESS)
-            throw new IllegalStateException("The game state is not in progress, can't play the round");
-        if (roundResult == null)
+        if (state != GameState.IN_PROGRESS) {
+            logger.error("The game is not in progress, can't play the round");
+            throw new IllegalStateException("The game is not in progress, can't play the round");
+        }
+        if (roundResult == null) {
+            logger.error("Round data is null! To record a game round, round's data must exist");
             throw new IllegalArgumentException("Round can be played only with valid rounds data");
+        }
 
         this.roundResults[activeRound - 1] = roundResult;
         this.activeRound++;
@@ -121,6 +134,8 @@ public class Game {
         } else {
             this.player2Score++;
         }
+        logger.debug("Round: P1: {}, P2: {}, Winner: {}", roundResult.player1Move(), roundResult.player2Move(), roundResult.winner() != null ? roundResult.winner().getName() : "No winner");
+        recordLogger.warn("Round: P1: {}, P2: {}, \tWinner: {}", roundResult.player1Move(), roundResult.player2Move(), roundResult.winner() != null ? roundResult.winner().getName() : "No winner");
 
         if (activeRound > rounds) {
             return endGame();
@@ -144,6 +159,9 @@ public class Game {
         this.result = new GameResult(player1Score, player2Score, draws, winner);
         this.state = GameState.FINISHED;
 
+        logger.debug("Game Scores: P1: {}, P2: {}, Winner: {}", result.nOfPlayer1Wins(), result.nOfPlayer2Wins(), result.winner() != null ? result.winner().getName() : "It's a tie");
+        recordLogger.error("Game Scores: P1: {}, P2: {}, \tWinner: {}", result.nOfPlayer1Wins(), result.nOfPlayer2Wins(), result.winner() != null ? result.winner().getName() : "It's a tie");
+
         this.player1.detachGame();
         this.player2.detachGame();
 
@@ -154,18 +172,21 @@ public class Game {
      * Adds the second player to the game.
      *
      * @param player the {@link Player} to join as player two
-     * @return true if player was successfully added
+     * @return true if player was successfully added; false otherwise
      */
     public boolean setPlayerTwo(Player player) {
         if (player == null){
+            logger.error("This code should never be executed! Null player reached domain layer. Null player can't join to a game. On this call, player is never null, check for corruption");
             throw new IllegalArgumentException("Joining player is not valid");
         }
 
         if(this.player2 != null){
+            logger.error("A try to join to a full game occurred. This code can't be reached with normal flow. Check for corruption");
             return false;
         }
 
         if(player.equals(this.player1)){
+            logger.warn("Player 1 trying to join to the same game. This code can't be reached with normal flow. Check for corruption");
             return false;
         }
 
@@ -182,6 +203,7 @@ public class Game {
      */
     public RoundResult getLastRoundResult() {
         if (activeRound < 2){
+            logger.warn("Asked for the last played round before playing any rounds");
             return null;
         }
         return roundResults[activeRound - 2];

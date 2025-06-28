@@ -4,6 +4,10 @@
         <!-- Console output -->
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] %logger{1} [%t] %-5level - %msg%n" />
+            <Filters>
+                <!-- Accept WARN and higher -->
+                <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
         </Console>
 
         <!-- Info file appender -->
@@ -11,7 +15,7 @@
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] %logger{1} %-5level - %msg%n" />
             <Filters>
                 <!-- Accept INFO only-->
-                <LevelRangeFilter minLevel="info" maxLevel="info" onMatch="ACCEPT" onMismatch="DENY"/>
+                <LevelRangeFilter minLevel="error" maxLevel="info" onMatch="ACCEPT" onMismatch="DENY"/>
             </Filters>
         </File>
 
@@ -24,16 +28,26 @@
             </Filters>
         </File>
 
-        <!-- Dedicated records file -->
-        <File name="RecordsFile" fileName="logs/records.log" append="true">
+        <!-- Dedicated rounds file -->
+        <File name="RoundsFile" fileName="logs/rounds.log" append="true">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] %msg%n"/>
+        </File>
+
+        <!-- Dedicated games file -->
+        <File name="GamesFile" fileName="logs/games.log" append="true">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] %msg%n"/>
+            <Filters>
+                <!-- Accept ERROR and higher -->
+                <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
         </File>
     </Appenders>
 
     <Loggers>
         <!-- Dedicated logger for records -->
         <Logger name="recordsLogger" level="info" additivity="false">
-            <AppenderRef ref="RecordsFile"/>
+            <AppenderRef ref="RoundsFile"/>
+            <AppenderRef ref="GamesFile"/>
         </Logger>
 
         <!-- Root logger for normal app logging -->
