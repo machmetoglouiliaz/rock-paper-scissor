@@ -5,7 +5,6 @@ import com.mourat.rockpaperscissors.application.services.GameSessionFactory;
 import com.mourat.rockpaperscissors.domain.model.Game;
 import com.mourat.rockpaperscissors.domain.model.Move;
 import com.mourat.rockpaperscissors.domain.model.Player;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

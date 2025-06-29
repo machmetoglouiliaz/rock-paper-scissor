@@ -153,6 +153,10 @@ public class GameRunnerServiceImpl implements GameRunnerService {
 
         ResultDto tDto = gameSession.makeMove(player, move);
         if(tDto.isSuccess()) {
+            if(tDto.isGameFinished()){
+                activeGames.remove(gameSession);
+                completeGames.add(gameSession);
+            }
             logger.debug("Player \"{}\":\"{}\" played \"{}\" successfully...", player.getName(), playerId, move);
             return tDto;
         }
